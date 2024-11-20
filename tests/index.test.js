@@ -523,9 +523,17 @@ describe("Arena endpoints", () =>{
         await axios.delete(`${BACKEND_URL}/api/v1/space/element`, {
             spaceId : spaceId,
             elementId : response.data.elemnets[0].id
+        },{
+            headers:{
+                "authorization" : `Bearer${userToken}`
+            }
         });
 
-        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`);
+        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
+            headers:{
+                "authorization" : `Bearer${userToken}`
+            }
+        });
         expect(response.data.Dimensions).toBe("100x200");
         expect(newResponse.data.elemnets.length).toBe(2);
     })
@@ -536,22 +544,108 @@ describe("Arena endpoints", () =>{
             "spaceId": spaceId,
             "x": 50,
             "y": 20
-          });
+          },{
+            headers:{
+                "authorization" : `Bearer${userToken}`
+            }
+        });
 
-        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`);
+        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
+            headers:{
+                "authorization" : `Bearer${userToken}`
+            }
+        });
         expect(newResponse.data.elemnets.length).toBe(3);
     })
     
     test("Adding an element fails if it lies outside the dimensions", async() =>{
-        const response = await axios.post(`${BACKEND_URL}/api/v1/space/${spaceId}`);
+        await axios.post(`${BACKEND_URL}/api/v1/space/${spaceId}`);
         await axios.delete(`${BACKEND_URL}/api/v1/space/element`, {
             "elementId": element1Id,
             "spaceId": spaceId,
             "x": 10000,
             "y": 20000
-          });
+          },{
+            headers:{
+                "authorization" : `Bearer${userToken}`
+            }
+        });
 
         const Response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`);
-        expect(expect.statuscode).toBe(404);
+        expect(Response.statuscode).toBe(404);
     })
 })
+
+describt("Create an element", () => {
+
+    let userToken;
+    let userId;
+    let adminID;
+    let adminToken;
+
+    beforeAll(async () => {
+        const username = `Raveesh-${Math.random()}`
+        const password = '12345'
+
+        const signupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username,
+            password,
+            type: "admin",
+        });
+
+        adminID = signupResponse.data.userid
+
+        const response = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username: username + "-user",
+            password,
+            
+        })
+
+        adminToken = response.data.token
+
+        const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username,
+            password,
+            type: "user",
+        });
+
+        userId = userSignupResponse.data.userid
+
+        const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username : username + "-user",
+            password,
+            
+        })
+
+        userToken = userSigninResponse.data.token
+    });
+
+    test("User is not able to hit an Endpoints" ,async () => {
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`,{
+            "imageUrl": "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+            "width": 1,
+            "height": 1,
+            "static": true // weather or not the user can sit on top of this element (is it considered as a collission or not)
+        },{
+            headers :{
+                authorization: `Bearer ${userToken}`
+            }
+        }) 
+        expect(element1Response.statuscode).tobe(403)
+ 
+
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            "thumbnail": "https://thumbnail.com/a.png",
+            "dimensions": "100x200",
+            "name": "100 person interview room",
+            "defaultElements": []
+         }, {
+            headers: {
+                authorization: `Bearer ${usertoken}`
+            }
+        });
+        expect(element1Response.statuscode).tobe(403)
+        expect(mapResponse.statuscode).tobe(403)
+    })
+})
+
