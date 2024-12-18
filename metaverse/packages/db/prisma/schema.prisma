@@ -15,24 +15,25 @@ datasource db {
 
 
 
-model User{
-  id          String       @id @unique @default(cuid())
-  username    String       @unique
-  password    String       @unique 
-  avatarId    String?
-  role        Role 
-  spaces      Space[]      
+model User {
+  id       String  @id @unique @default(cuid())
+  username String  @unique
+  password String
+  avatarId String?
+  role     Role
+  spaces   Space[]
+  avatar    Avatar? @relation(fields: [avatarId], references: [id])
 }
 
 model Space {
-  id           String    @id @unique @default(cuid())
-  name         String  
-  width        Int
-  height       Int?
-  thumbnail    String?
-  creatorId    String
-  creator      User      @relation(fields: [creatorId], references: [id])
-  elements     spaceElements[] 
+  id        String  @id @unique @default(cuid())
+  name      String
+  width     Int
+  height    Int
+  thumbnail String?
+  creatorId String
+  creator     User    @relation(fields: [creatorId], references: [id])
+  elements  spaceElements[]
 }
 
 model spaceElements {
@@ -41,17 +42,18 @@ model spaceElements {
   spaceId   String
   x         Int
   y         Int
-  space     Space   @relation(fields: [spaceId], references: [id])
+  space     Space  @relation(fields: [spaceId], references: [id])
   element   Element @relation(fields: [elementId], references: [id])
 }
 
 model Element {
-  id       String @id @unique @default(cuid())
-  width    Int
-  height   Int
-  imageUrl String
-  space    spaceElements[]
-  map      mapElements[]
+  id              String @id @unique @default(cuid())
+  width           Int
+  height          Int
+  static          Boolean
+  imageUrl        String
+  spaces          spaceElements[]
+  mapElements     MapElements[]
 }
 
 model Map {
@@ -59,22 +61,25 @@ model Map {
   width  Int
   height Int
   name   String
+  thumbnail String
+  mapElements MapElements[]
 }
 
-model mapElements {
+model MapElements {
   id        String  @id @unique @default(cuid())
   mapId     String
-  elementId String?
+  elementId String
   x         Int?
   y         Int?
-  map       Map     @relations(fields: [mapId], references: [id])
-  elemenet  Element @relations(fields: [elementId], references: [[id]])
+  map       Map     @relation(fields: [mapId], references: [id])
+  element   Element @relation(fields: [elementId], references: [id])
 }
 
 model Avatar {
   id       String  @id @unique @default(cuid())
   imageUrl String?
   name     String?
+  users    User[]
 }
 
 enum Role {
