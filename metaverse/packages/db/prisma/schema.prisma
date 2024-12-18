@@ -50,7 +50,8 @@ model Element {
   width    Int
   height   Int
   imageUrl String
-  space 
+  space    spaceElements[]
+  map      mapElements[]
 }
 
 model Map {
@@ -66,6 +67,8 @@ model mapElements {
   elementId String?
   x         Int?
   y         Int?
+  map       Map     @relations(fields: [mapId], references: [id])
+  elemenet  Element @relations(fields: [elementId], references: [[id]])
 }
 
 model Avatar {
